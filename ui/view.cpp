@@ -217,10 +217,10 @@ void View::initVR() {
 
     // get eye matrices
     m_rightProjection = vrMatrixToQt(m_hmd->GetProjectionMatrix(vr::Eye_Right, m_player->getNear(), m_player->getFar()));
-    m_rightPose = glm::inverse(vrMatrixToQt(m_hmd->GetEyeToHeadTransform(vr::Eye_Right)));
+    m_rightPose = vrMatrixToQt(m_hmd->GetEyeToHeadTransform(vr::Eye_Right));
 
     m_leftProjection = vrMatrixToQt(m_hmd->GetProjectionMatrix(vr::Eye_Left, m_player->getNear(), m_player->getFar()));
-    m_leftPose = glm::inverse(vrMatrixToQt(m_hmd->GetEyeToHeadTransform(vr::Eye_Left)));
+    m_leftPose = vrMatrixToQt(m_hmd->GetEyeToHeadTransform(vr::Eye_Left));
 
     // setup frame buffers for eyes
     m_hmd->GetRecommendedRenderTargetSize(&m_eyeWidth, &m_eyeHeight);
