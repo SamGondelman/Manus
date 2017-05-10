@@ -142,14 +142,19 @@ void View::initializeGL() {
                                                              ":/shaders/lightParticlesDraw.frag",
                                                              ":/shaders/lightParticlesDraw.vert",
                                                              ":/shaders/lightParticlesUpdate.frag");
+    QStringList fireAttachments;
+    fireAttachments.append(QString("initHandPosIn"));
+    fireAttachments.append(QString("initHandDirIn"));
     m_fireParticlesLeft = std::make_shared<ParticleSystem>(1000,
                                                            ":/shaders/fireParticlesDraw.frag",
                                                            ":/shaders/fireParticlesDraw.vert",
-                                                           ":/shaders/fireParticlesUpdate.frag");
+                                                           ":/shaders/fireParticlesUpdate.frag",
+                                                           fireAttachments);
     m_fireParticlesRight = std::make_shared<ParticleSystem>(1000,
                                                             ":/shaders/fireParticlesDraw.frag",
                                                             ":/shaders/fireParticlesDraw.vert",
-                                                            ":/shaders/fireParticlesUpdate.frag");
+                                                            ":/shaders/fireParticlesUpdate.frag",
+                                                            fireAttachments);
 
     QImage shieldMapImage = QImage(":/images/shieldNormalMap.png");
     m_shieldMap = std::make_unique<Texture2D>(shieldMapImage.bits(),

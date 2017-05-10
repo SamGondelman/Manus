@@ -47,7 +47,14 @@ vec3 calculateInitialVelocity(int index) {
 }
 
 vec4 initPosition(int index) {
-    return vec4(handPos, calculateLifetime(index));
+//    return vec4(handPos, calculateLifetime(index));
+    float theta = 2.0 * PI * hash(index * 872.0238);
+    float phi = PI * hash(index * 1912.124);
+    const float MAX_OFFSET = 0.1;
+    float offsetMag = MAX_OFFSET * hash(index * 98723.345);
+    float sinPhi = sin(phi);
+    return vec4(handPos + offsetMag * vec3(sinPhi*cos(theta), sinPhi*sin(theta), cos(phi)),
+                calculateLifetime(index));
 }
 
 vec4 initVelocity(int index) {
@@ -56,14 +63,14 @@ vec4 initVelocity(int index) {
 
 vec4 updatePosition(int index, vec4 pos, vec4 vel) {
     if (vel.w < 0) {
-        vel = vec4(0);
+        return vec4(initPosition(index).xyz, pos.w);
     }
     return vec4(pos.xyz + vel.xyz * dt, pos.w);
 }
 
 vec4 updateVelocity(int index, vec4 pos, vec4 vel) {
     if (vel.w < 0) {
-        return vel + vec4(0, 0, 0, dt);
+        return vec4(initVelocity(index).xyz, vel.w + dt);
     }
     const float G = -0.1;
     return vel + vec4(0, G * dt, 0, dt);

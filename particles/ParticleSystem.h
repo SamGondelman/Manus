@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <QPair>
+#include <QStringList>
 
 class View;
 class FBO;
@@ -18,8 +19,8 @@ class CS123Shader;
 class ParticleSystem {
 public:
     ParticleSystem(int numParticles, std::string drawFrag, std::string drawVert, std::string updateFrag,
-                   std::string updateVert = ":/shaders/fullscreenQuad.vert",
-                   int numColorAttachments = 2);
+                   QStringList &extraAttachments = QStringList(),
+                   std::string updateVert = ":/shaders/fullscreenQuad.vert");
 
     void update(float dt, bool active = true);
     void update(float dt, std::vector<QPair<std::string, glm::vec3>> &args, bool active = true);
@@ -34,6 +35,7 @@ private:
     bool m_firstPass;
     bool m_evenPass;
     int m_numParticles;
+    QStringList m_extraAttachments;
 };
 
 #endif // PARTICLESYSTEM_H
