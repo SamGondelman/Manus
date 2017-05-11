@@ -10,6 +10,7 @@
 
 #include "CS123SceneData.h"
 #include "Entity.h"
+#include "Enemy.h"
 
 class CS123Shader;
 
@@ -21,7 +22,7 @@ public:
 
     virtual void makeCurrent();
     virtual void update(float dt);
-    virtual void drawGeometry() = 0;
+    virtual void drawGeometry();
 
     std::vector<Light>& getLights() { return m_lights; }
     std::shared_ptr<CS123Shader> getWorldProgram() { return m_program; }
@@ -41,6 +42,7 @@ protected:
 
     // TODO: figure out how to make this a std::vector<std::shared_ptr<Entity>>
     std::vector<Entity> m_entities;
+    std::vector<std::shared_ptr<Enemy>> m_enemies;
 };
 
 #endif // WORLD_H

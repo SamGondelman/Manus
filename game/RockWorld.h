@@ -9,8 +9,6 @@ public:
 
     void makeCurrent() override;
     void update(float dt) override;
-    void drawGeometry() override;
-
 };
 
 #endif // ROCKWORLD_H

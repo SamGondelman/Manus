@@ -4,6 +4,8 @@
 #include "gl/shaders/CS123Shader.h"
 #include "Player.h"
 
+#include "HangingEnemy.h"
+
 PhysicsWorld::PhysicsWorld() : World(":/shaders/shader.vert", ":/shaders/shader.frag")
 {
 }
@@ -31,20 +33,10 @@ void PhysicsWorld::makeCurrent() {
                             btVector3(0, 2, 1.5), btVector3(1.0, 1.0, 1.0), mat);
     m_entities.emplace_back(m_physWorld, ShapeType::CUBE, 0.0f,
                             btVector3(0, -1, 0), btVector3(3.0, 0.5, 3.0), mat);
+
+    m_enemies.push_back(std::make_shared<HangingEnemy>(m_physWorld, btVector3(0, 1, 0), btVector3(0.25, 0.5, 0.25)));
 }
 
 void PhysicsWorld::update(float dt) {
     World::update(dt);
-}
-
-void PhysicsWorld::drawGeometry() {
-    glm::mat4 m;
-    for (auto& e : m_entities) {
-        if (e.m_draw) {
-            e.getModelMatrix(m);
-            m_program->setUniform("M", m);
-            m_program->applyMaterial(e.getMaterial());
-            e.draw();
-        }
-    }
 }

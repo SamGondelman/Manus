@@ -47,7 +47,9 @@ SOURCES += \
     ui/viewformat.cpp \
     ui/mainwindow.cpp \
     glew-1.10.0/src/glew.c \
-    main.cpp
+    main.cpp \
+    game/Enemy.cpp \
+    game/HangingEnemy.cpp
 
 HEADERS += \
     camera/Player.h \
@@ -87,7 +89,9 @@ HEADERS += \
     ui/viewformat.h \
     ui/mainwindow.h \
     ui_mainwindow.h \
-    glew-1.10.0/include/GL/glew.h
+    glew-1.10.0/include/GL/glew.h \
+    game/Enemy.h \
+    game/HangingEnemy.h
 
 FORMS += ui/mainwindow.ui
 INCLUDEPATH += camera game glm lib libraries libraries/bullet3/src libraries/openvr/headers particles shapes ui glew-1.10.0/include

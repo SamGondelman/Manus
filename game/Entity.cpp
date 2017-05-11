@@ -5,7 +5,6 @@
 #include "SphereMesh.h"
 #include "ConeMesh.h"
 #include "CylinderMesh.h"
-#include <BulletDynamics/Dynamics/btRigidBody.h>
 
 Entity::Entity(std::shared_ptr<btDiscreteDynamicsWorld> physWorld, ShapeType shapeType, btScalar mass,
                btVector3 pos, btVector3 scale, CS123SceneMaterial mat, btQuaternion rot, btVector3 vel) :

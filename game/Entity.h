@@ -8,6 +8,7 @@
 
 #include <btBulletCollisionCommon.h>
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
+#include <BulletDynamics/Dynamics/btRigidBody.h>
 
 #include "CS123SceneData.h"
 

@@ -35,15 +35,3 @@ void RockWorld::update(float dt) {
     View::m_player->setEye(glm::vec3(0.0f, 1.5f + 0.5f * glm::sin(View::m_globalTime/3.0f), 6.0f));
     View::m_player->setCenter(glm::vec3(0));
 }
-
-void RockWorld::drawGeometry() {
-    glm::mat4 m;
-    for (auto& e : m_entities) {
-        if (e.m_draw) {
-            e.getModelMatrix(m);
-            m_program->setUniform("M", m);
-            m_program->applyMaterial(e.getMaterial());
-            e.draw();
-        }
-    }
-}

@@ -26,15 +26,36 @@ World::~World() {
 }
 
 void World::update(float dt) {
+    for (auto &e : m_enemies) e->update(dt);
     m_physWorld->stepSimulation(dt);
 }
 
 void World::makeCurrent() {
-    if (m_entities.size() > 0) {
-        for (auto& e : m_entities) m_physWorld->removeRigidBody(e.m_rigidBody.get());
-        m_entities.clear();
-        m_solver->reset();
-        m_physWorld->clearForces();
-        m_broadphase->resetPool(m_dispatcher.get());
+    for (auto& e : m_entities) m_physWorld->removeRigidBody(e.m_rigidBody.get());
+    for (auto& e : m_enemies) m_physWorld->removeRigidBody(e->m_rigidBody.get());
+    m_entities.clear();
+    m_enemies.clear();
+    m_solver->reset();
+    m_physWorld->clearForces();
+    m_broadphase->resetPool(m_dispatcher.get());
+}
+
+void World::drawGeometry() {
+    glm::mat4 m;
+    for (auto& e : m_entities) {
+        if (e.m_draw) {
+            e.getModelMatrix(m);
+            m_program->setUniform("M", m);
+            m_program->applyMaterial(e.getMaterial());
+            e.draw();
+        }
+    }
+    for (auto& e : m_enemies) {
+        if (e->m_draw) {
+            e->getModelMatrix(m);
+            m_program->setUniform("M", m);
+            m_program->applyMaterial(e->getMaterial());
+            e->draw();
+        }
     }
 }

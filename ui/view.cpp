@@ -681,7 +681,9 @@ void View::updatePoses() {
     vr::VRCompositor()->WaitGetPoses(m_trackedDevicePose, vr::k_unMaxTrackedDeviceCount, nullptr, 0);
 
     if (m_trackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid) {
-        m_hmdPose = glm::inverse(vrMatrixToQt(m_trackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsoluteTracking));
+        glm::mat4 h = vrMatrixToQt(m_trackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsoluteTracking);
+        m_hmdPose = glm::inverse(h);
+        m_player->setEye(glm::vec3(h[3][0], h[3][1], h[3][2]));
     }
 
     if (m_hmd->IsTrackedDeviceConnected(m_hmd->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_LeftHand))) {
