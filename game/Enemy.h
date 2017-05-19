@@ -9,7 +9,7 @@ public:
     Enemy(std::shared_ptr<btDiscreteDynamicsWorld> physWorld, ShapeType shapeType, btScalar mass,
           btVector3 pos, btVector3 scale, CS123SceneMaterial mat) : Entity(physWorld, shapeType, mass, pos, scale, mat) {}
 
-    virtual void update(float dt) = 0;
+    virtual void update(float dt, std::shared_ptr<btDiscreteDynamicsWorld> physWorld) = 0;
 };
 
 #endif // ENEMY_H

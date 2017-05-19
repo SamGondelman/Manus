@@ -835,14 +835,18 @@ void View::tick() {
     // Rocks
     updateRocks();
 
+    // Hand information
+    glm::mat4 M1 = vrMatrixToQt(m_trackedHandPoses[Hand::RIGHT].mDeviceToAbsoluteTracking);
+    glm::vec3 p1 = glm::vec3(M1[3]);
+    glm::vec3 d1 = glm::quat(glm::mat3(M1)) * glm::vec3(0, 0, -1);
+    glm::mat4 M2 = vrMatrixToQt(m_trackedHandPoses[Hand::LEFT].mDeviceToAbsoluteTracking);
+    glm::vec3 p2 = glm::vec3(M2[3]);
+    glm::vec3 d2 = glm::quat(glm::mat3(M2)) * glm::vec3(0, 0, -1);
+
     // Shield movement
     if (m_action == WATER && _axisStates[LEFT_TRIGGER] >= 1.0f && _axisStates[RIGHT_TRIGGER] >= 1.0f) {
         btTransform t;
         t.setIdentity();
-        glm::mat4 M1 = vrMatrixToQt(m_trackedHandPoses[Hand::RIGHT].mDeviceToAbsoluteTracking);
-        glm::vec3 p1 = glm::vec3(M1[3]);
-        glm::mat4 M2 = vrMatrixToQt(m_trackedHandPoses[Hand::LEFT].mDeviceToAbsoluteTracking);
-        glm::vec3 p2 = glm::vec3(M2[3]);
         glm::vec3 o = (p1 + p2) / 2.0f;
         float l = glm::length(p1 - p2);
         t.setOrigin(btVector3(o.x, o.y, o.z));
@@ -860,6 +864,47 @@ void View::tick() {
         m_shield->m_rigidBody->getMotionState()->setWorldTransform(t);
     }
 
+    // Shooting damage entities
+    const float LIGHT_TIME = 0.25f;
+    const float FIRE_TIME = 0.1f;
+    CS123SceneMaterial mat;
+    mat.cAmbient = glm::vec4(1);
+    mat.cDiffuse = glm::vec4(1);
+    mat.cSpecular = glm::vec4(1);
+    mat.shininess = 10.0f;
+    if ((m_action == LIGHT || m_action == FIRE) && _axisStates[RIGHT_TRIGGER] >= 1.0f) {
+        m_rightHandTimer += m_dt;
+        if (m_action == LIGHT && m_rightHandTimer > LIGHT_TIME) {
+            m_worlds[m_world]->getEntities().emplace_back(m_worlds[m_world]->getPhysWorld(), ShapeType::SPHERE, 1.0f,
+                                                          btVector3(p1.x, p1.y, p1.z), btVector3(0.1f, 0.1f, 0.1f),
+                                                          mat, btQuaternion(0, 0, 0, 1), btVector3(d1.x, d1.y, d1.z));
+            m_worlds[m_world]->getEntities()[m_worlds[m_world]->getEntities().size() - 1].m_rigidBody->setGravity(btVector3(0, 0, 0));
+            m_rightHandTimer = 0.0f;
+        } else if (m_action == FIRE && m_rightHandTimer > FIRE_TIME) {
+            m_worlds[m_world]->getEntities().emplace_back(m_worlds[m_world]->getPhysWorld(), ShapeType::SPHERE, 1.0f,
+                                                          btVector3(p1.x, p1.y, p1.z), btVector3(0.1f, 0.1f, 0.1f),
+                                                          mat, btQuaternion(0, 0, 0, 1), btVector3(d1.x, d1.y, d1.z));
+            m_worlds[m_world]->getEntities()[m_worlds[m_world]->getEntities().size() - 1].m_rigidBody->setGravity(btVector3(0, 0, 0));
+            m_rightHandTimer = 0.0f;
+        }
+    }
+    if ((m_action == LIGHT || m_action == FIRE) && _axisStates[LEFT_TRIGGER] >= 1.0f) {
+        m_leftHandTimer += m_dt;
+        if (m_action == LIGHT && m_leftHandTimer > LIGHT_TIME) {
+            m_worlds[m_world]->getEntities().emplace_back(m_worlds[m_world]->getPhysWorld(), ShapeType::SPHERE, 1.0f,
+                                                          btVector3(p2.x, p2.y, p2.z), btVector3(0.1f, 0.1f, 0.1f),
+                                                          mat, btQuaternion(0, 0, 0, 1), btVector3(d2.x, d2.y, d2.z));
+            m_worlds[m_world]->getEntities()[m_worlds[m_world]->getEntities().size() - 1].m_rigidBody->setGravity(btVector3(0, 0, 0));
+            m_leftHandTimer = 0.0f;
+        } else if (m_action == FIRE && m_leftHandTimer > FIRE_TIME) {
+            m_worlds[m_world]->getEntities().emplace_back(m_worlds[m_world]->getPhysWorld(), ShapeType::SPHERE, 1.0f,
+                                                          btVector3(p2.x, p2.y, p2.z), btVector3(0.1f, 0.1f, 0.1f),
+                                                          mat, btQuaternion(0, 0, 0, 1), btVector3(d2.x, d2.y, d2.z));
+            m_worlds[m_world]->getEntities()[m_worlds[m_world]->getEntities().size() - 1].m_rigidBody->setGravity(btVector3(0, 0, 0));
+            m_leftHandTimer = 0.0f;
+        }
+    }
+
     m_worlds[m_world]->update(m_dt);
 
     // Flag this view for repainting (Qt will call paintGL() soon after)
@@ -871,9 +916,9 @@ void View::switchWorld(WorldState prevWorld) {
 
     if (!m_shield) {
         m_shield = std::make_unique<Entity>(m_worlds[m_world]->getPhysWorld(), ShapeType::CUBE, 0.0f,
-                                                btVector3(0.0f, 10000.0f, 0.0f), btVector3(1.0f, 1.0f, 1.0f));
+                                            btVector3(0.0f, 10000.0f, 0.0f), btVector3(1.0f, 1.0f, 1.0f));
         m_shield->m_rigidBody->setCollisionFlags(m_shield->m_rigidBody->getCollisionFlags() |
-                                                     btCollisionObject::CF_KINEMATIC_OBJECT);
+                                                 btCollisionObject::CF_KINEMATIC_OBJECT);
         m_shield->m_rigidBody->setActivationState(DISABLE_DEACTIVATION);
     } else {
         m_worlds[prevWorld]->getPhysWorld()->removeRigidBody(m_shield->m_rigidBody.get());

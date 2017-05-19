@@ -34,7 +34,7 @@ void PhysicsWorld::makeCurrent() {
     m_entities.emplace_back(m_physWorld, ShapeType::CUBE, 0.0f,
                             btVector3(0, -1, 0), btVector3(3.0, 0.5, 3.0), mat);
 
-    m_enemies.push_back(std::make_shared<HangingEnemy>(m_physWorld, btVector3(0, 1, 0), btVector3(0.25, 0.5, 0.25)));
+    m_enemies.push_back(std::make_shared<HangingEnemy>(m_physWorld, btVector3(0, 2, 0), btVector3(0.25, 0.5, 0.25)));
 }
 
 void PhysicsWorld::update(float dt) {

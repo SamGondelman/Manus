@@ -121,6 +121,8 @@ private:
     std::shared_ptr<ParticleSystem> m_lightParticlesRight;
     std::shared_ptr<ParticleSystem> m_fireParticlesLeft;
     std::shared_ptr<ParticleSystem> m_fireParticlesRight;
+    float m_leftHandTimer { 0.0f };
+    float m_rightHandTimer { 0.0f };
     float m_rockTimeLeft;
     float m_rockTimeRight;
     std::unique_ptr<Texture2D> m_shieldMap;

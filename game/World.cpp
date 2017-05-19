@@ -26,7 +26,7 @@ World::~World() {
 }
 
 void World::update(float dt) {
-    for (auto &e : m_enemies) e->update(dt);
+    for (auto &e : m_enemies) e->update(dt, m_physWorld);
     m_physWorld->stepSimulation(dt);
 }
 
