@@ -76,6 +76,15 @@ enum ViveAxis {
     RIGHT_TRIGGER,
 };
 
+enum ActionMode {
+    GRAB = 0,
+    LIGHT,
+    FIRE,
+    ROCK,
+    WATER,
+    NUM_ACTION_MODES
+};
+
 class View : public QGLWidget {
     Q_OBJECT
 
@@ -121,6 +130,7 @@ private:
     // Game state
     DrawMode m_drawMode;
     WorldState m_world;
+    ActionMode m_action { GRAB };
 
     // FBOs and shaders
     std::unique_ptr<FBO> m_deferredBuffer;

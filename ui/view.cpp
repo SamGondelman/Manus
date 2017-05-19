@@ -33,6 +33,8 @@
 #include <QDebug>
 #include <iostream>
 
+#define M_2PI 6.28318530718
+
 float View::m_globalTime = 0.0f;
 std::unique_ptr<Player> View::m_player = nullptr;
 std::unique_ptr<SphereMesh> View::m_sphere = nullptr;
@@ -524,7 +526,24 @@ void View::drawHands(glm::mat4 &V, glm::mat4 &P) {
     program->setUniform("P", P);
 
     CS123SceneMaterial mat;
-    mat.cAmbient = glm::vec4(0.5, 0, 0, 1);
+    switch (m_action) {
+        case GRAB:
+            mat.cAmbient = glm::vec4(0.2, 0.2, 0.2, 1);
+            break;
+        case LIGHT:
+            mat.cAmbient = glm::vec4(10, 10, 10, 1);
+            break;
+        case FIRE:
+            mat.cAmbient = glm::vec4(0.75, 0.2, 0, 1);
+            break;
+        case ROCK:
+            mat.cAmbient = glm::vec4(0.137, 0, 0.118, 1);
+            break;
+        case WATER:
+            mat.cAmbient = glm::vec4(0, 0.5, 0.5, 1);
+            break;
+    }
+
     mat.cDiffuse = glm::vec4(0.5, 0.5, 0.5, 1);
     mat.cSpecular = glm::vec4(0.5, 0.5, 0.5, 1);
     mat.shininess = 10.0;
@@ -534,12 +553,6 @@ void View::drawHands(glm::mat4 &V, glm::mat4 &P) {
         program->setUniform("M", vrMatrixToQt(m_trackedHandPoses[Hand::LEFT].mDeviceToAbsoluteTracking) * glm::rotate(glm::radians(90.0f), glm::vec3(1, 0, 0)) * glm::scale(glm::vec3(0.1, 0.25, 0.1)));
         m_cone->draw();
     }
-
-    mat.cAmbient = glm::vec4(0, 0, 0.5, 1);
-    mat.cDiffuse = glm::vec4(0.5, 0.5, 0.5, 1);
-    mat.cSpecular = glm::vec4(0.5, 0.5, 0.5, 1);
-    mat.shininess = 10.0;
-    program->applyMaterial(mat);
 
     if (m_trackedHandPoses[Hand::RIGHT].bPoseIsValid && m_trackedHandPoses[Hand::RIGHT].bDeviceIsConnected) {
         program->setUniform("M", vrMatrixToQt(m_trackedHandPoses[Hand::RIGHT].mDeviceToAbsoluteTracking) * glm::rotate(glm::radians(90.0f), glm::vec3(1, 0, 0)) * glm::scale(glm::vec3(0.1, 0.25, 0.1)));
@@ -576,16 +589,16 @@ void View::drawParticles(float dt, glm::mat4& V, glm::mat4& P) {
         args[0] = QPair<std::string, glm::vec3>("handPos", glm::vec3(mat[3]));
         args[1] = QPair<std::string, glm::vec3>("handDir", glm::normalize(glm::mat3(mat) * glm::vec3(0, 0, -1)));
     }
-    m_lightParticlesLeft->update(dt, args, _axisStates[LEFT_X] > 0.7f);
-    m_fireParticlesLeft->update(dt, args, _axisStates[LEFT_TRIGGER] >= 1.0f);
+    m_lightParticlesLeft->update(dt, args, m_action == LIGHT && _axisStates[LEFT_TRIGGER] >= 1.0f);
+    m_fireParticlesLeft->update(dt, args, m_action == FIRE && _axisStates[LEFT_TRIGGER] >= 1.0f);
 
     if (m_trackedHandPoses[Hand::RIGHT].bPoseIsValid && m_trackedHandPoses[Hand::RIGHT].bDeviceIsConnected) {
         glm::mat4 mat = vrMatrixToQt(m_trackedHandPoses[Hand::RIGHT].mDeviceToAbsoluteTracking);
         args[0] = QPair<std::string, glm::vec3>("handPos", glm::vec3(mat[3]));
         args[1] = QPair<std::string, glm::vec3>("handDir", glm::normalize(glm::mat3(mat) * glm::vec3(0, 0, -1)));
     }
-    m_lightParticlesRight->update(dt, args, _axisStates[RIGHT_X] < -0.7f);
-    m_fireParticlesRight->update(dt, args, _axisStates[RIGHT_TRIGGER] >= 1.0f);
+    m_lightParticlesRight->update(dt, args, m_action == LIGHT && _axisStates[RIGHT_TRIGGER] >= 1.0f);
+    m_fireParticlesRight->update(dt, args, m_action == FIRE && _axisStates[RIGHT_TRIGGER] >= 1.0f);
     glBindVertexArray(0);
 
     // Bind the deferred buffer to draw the particles
@@ -752,7 +765,7 @@ void View::handleInput(const vr::VRControllerState_t &state, bool isLeftHand) {
 void View::updateRocks() {
     // Rock spawning
     const float ROCK_VEL = 20.0f;
-    if (_buttonStates.find(LEFT_GRIP) != _buttonStates.end()) {
+    if (m_action == ROCK && _axisStates[LEFT_TRIGGER] >= 1.0f) {
         m_rockTimeLeft += m_dt;
         m_rockTimeLeft = std::min(1.75f, m_rockTimeLeft);
         if (m_rockTimeLeft == 1.75f) {
@@ -772,13 +785,13 @@ void View::updateRocks() {
                                                           btVector3(0.1, 0.25, 0.1), mat, btQuaternion(rot.x, rot.y, rot.z, rot.w),
                                                           btVector3(dir.x, dir.y, dir.z));
             m_rockTimeLeft = 0.0f;
-            _buttonStates.erase(LEFT_GRIP);
+            _axisStates[LEFT_TRIGGER] = 0.0f;
         }
     } else {
         m_rockTimeLeft = std::max(0.0f, m_rockTimeLeft - 5 * m_dt);
     }
 
-    if (_buttonStates.find(RIGHT_GRIP) != _buttonStates.end()) {
+    if (m_action == ROCK && _axisStates[RIGHT_TRIGGER] >= 1.0f) {
         m_rockTimeRight += m_dt;
         m_rockTimeRight = std::min(1.75f, m_rockTimeRight);
         if (m_rockTimeRight == 1.75f) {
@@ -798,7 +811,7 @@ void View::updateRocks() {
                                                           btVector3(0.1, 0.25, 0.1), mat, btQuaternion(rot.x, rot.y, rot.z, rot.w),
                                                           btVector3(dir.x, dir.y, dir.z));
             m_rockTimeRight = 0.0f;
-            _buttonStates.erase(LEFT_GRIP);
+            _axisStates[LEFT_TRIGGER] = 0.0f;
         }
     } else {
         m_rockTimeRight = std::max(0.0f, m_rockTimeRight - 5 * m_dt);
@@ -815,6 +828,13 @@ void View::tick() {
     // VR updates
     updatePoses();
     updateInputs();
+
+    // Action select
+    if (_buttonStates.find(LEFT_TOUCHPAD) != _buttonStates.end()) {
+        m_action = (ActionMode) ((int) (((std::atan2f(_axisStates[LEFT_Y], _axisStates[LEFT_X]) + M_PI) / M_2PI) * NUM_ACTION_MODES));
+    } else if (_buttonStates.find(RIGHT_TOUCHPAD) != _buttonStates.end()) {
+        m_action = (ActionMode) ((int) (((std::atan2f(_axisStates[RIGHT_Y], _axisStates[RIGHT_X]) + M_PI) / M_2PI) * NUM_ACTION_MODES));
+    }
 
     // Rocks
     updateRocks();
