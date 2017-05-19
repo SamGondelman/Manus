@@ -866,7 +866,9 @@ void View::tick() {
 
     // Shooting damage entities
     const float LIGHT_TIME = 0.25f;
+    const float LIGHT_VEL = 1.0f;
     const float FIRE_TIME = 0.1f;
+    const float FIRE_VEL = 3.0f;
     CS123SceneMaterial mat;
     mat.cAmbient = glm::vec4(1);
     mat.cDiffuse = glm::vec4(1);
@@ -875,15 +877,17 @@ void View::tick() {
     if ((m_action == LIGHT || m_action == FIRE) && _axisStates[RIGHT_TRIGGER] >= 1.0f) {
         m_rightHandTimer += m_dt;
         if (m_action == LIGHT && m_rightHandTimer > LIGHT_TIME) {
+            glm::vec3 vel = LIGHT_VEL * d1;
             m_worlds[m_world]->getEntities().emplace_back(m_worlds[m_world]->getPhysWorld(), ShapeType::SPHERE, 1.0f,
                                                           btVector3(p1.x, p1.y, p1.z), btVector3(0.1f, 0.1f, 0.1f),
-                                                          mat, btQuaternion(0, 0, 0, 1), btVector3(d1.x, d1.y, d1.z));
+                                                          mat, btQuaternion(0, 0, 0, 1), btVector3(vel.x, vel.y, vel.z));
             m_worlds[m_world]->getEntities()[m_worlds[m_world]->getEntities().size() - 1].m_rigidBody->setGravity(btVector3(0, 0, 0));
             m_rightHandTimer = 0.0f;
         } else if (m_action == FIRE && m_rightHandTimer > FIRE_TIME) {
+            glm::vec3 vel = FIRE_VEL * d1;
             m_worlds[m_world]->getEntities().emplace_back(m_worlds[m_world]->getPhysWorld(), ShapeType::SPHERE, 1.0f,
                                                           btVector3(p1.x, p1.y, p1.z), btVector3(0.1f, 0.1f, 0.1f),
-                                                          mat, btQuaternion(0, 0, 0, 1), btVector3(d1.x, d1.y, d1.z));
+                                                          mat, btQuaternion(0, 0, 0, 1), btVector3(vel.x, vel.y, vel.z));
             m_worlds[m_world]->getEntities()[m_worlds[m_world]->getEntities().size() - 1].m_rigidBody->setGravity(btVector3(0, 0, 0));
             m_rightHandTimer = 0.0f;
         }
@@ -891,15 +895,17 @@ void View::tick() {
     if ((m_action == LIGHT || m_action == FIRE) && _axisStates[LEFT_TRIGGER] >= 1.0f) {
         m_leftHandTimer += m_dt;
         if (m_action == LIGHT && m_leftHandTimer > LIGHT_TIME) {
+            glm::vec3 vel = LIGHT_VEL * d2;
             m_worlds[m_world]->getEntities().emplace_back(m_worlds[m_world]->getPhysWorld(), ShapeType::SPHERE, 1.0f,
                                                           btVector3(p2.x, p2.y, p2.z), btVector3(0.1f, 0.1f, 0.1f),
-                                                          mat, btQuaternion(0, 0, 0, 1), btVector3(d2.x, d2.y, d2.z));
+                                                          mat, btQuaternion(0, 0, 0, 1), btVector3(vel.x, vel.y, vel.z));
             m_worlds[m_world]->getEntities()[m_worlds[m_world]->getEntities().size() - 1].m_rigidBody->setGravity(btVector3(0, 0, 0));
             m_leftHandTimer = 0.0f;
         } else if (m_action == FIRE && m_leftHandTimer > FIRE_TIME) {
+            glm::vec3 vel = FIRE_VEL * d2;
             m_worlds[m_world]->getEntities().emplace_back(m_worlds[m_world]->getPhysWorld(), ShapeType::SPHERE, 1.0f,
                                                           btVector3(p2.x, p2.y, p2.z), btVector3(0.1f, 0.1f, 0.1f),
-                                                          mat, btQuaternion(0, 0, 0, 1), btVector3(d2.x, d2.y, d2.z));
+                                                          mat, btQuaternion(0, 0, 0, 1), btVector3(vel.x, vel.y, vel.z));
             m_worlds[m_world]->getEntities()[m_worlds[m_world]->getEntities().size() - 1].m_rigidBody->setGravity(btVector3(0, 0, 0));
             m_leftHandTimer = 0.0f;
         }

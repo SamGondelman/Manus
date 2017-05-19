@@ -26,7 +26,7 @@ World::~World() {
 }
 
 void World::update(float dt) {
-    for (auto &e : m_enemies) e->update(dt, m_physWorld);
+    for (auto &e : m_enemies) e->update(dt, *this);
     m_physWorld->stepSimulation(dt);
 }
 
@@ -55,7 +55,8 @@ void World::drawGeometry() {
             e->getModelMatrix(m);
             m_program->setUniform("M", m);
             m_program->applyMaterial(e->getMaterial());
-            e->draw();
+            // Enemies can choose to draw additional elements
+            e->draw(m_program);
         }
     }
 }
