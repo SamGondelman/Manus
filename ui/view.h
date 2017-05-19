@@ -124,8 +124,7 @@ private:
     float m_rockTimeLeft;
     float m_rockTimeRight;
     std::unique_ptr<Texture2D> m_shieldMap;
-    std::unique_ptr<Entity> m_leftShield;
-    std::unique_ptr<Entity> m_rightShield;
+    std::unique_ptr<Entity> m_shield;
 
     // Game state
     DrawMode m_drawMode;

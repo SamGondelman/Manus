@@ -70,6 +70,11 @@ void Entity::getModelMatrix(glm::mat4& m) {
     m = m * m_scale;
 }
 
+void Entity::setScale(const glm::mat4 &s) {
+    m_scale = s;
+    m_collShape->setLocalScaling(btVector3(s[0][0], s[1][1], s[2][2]));
+}
+
 void Entity::draw() {
     switch (m_shapeType) {
         case ShapeType::CUBE:

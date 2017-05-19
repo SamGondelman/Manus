@@ -35,6 +35,7 @@ public:
     void getModelMatrix(glm::mat4& m);
     void draw();
     CS123SceneMaterial& getMaterial() { return m_mat; }
+    void setScale(const glm::mat4 &s);
 
     std::unique_ptr<btRigidBody> m_rigidBody;
     bool m_draw;

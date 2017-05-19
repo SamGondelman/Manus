@@ -46,8 +46,7 @@ std::unordered_set<int> View::m_pressedKeys = std::unordered_set<int>();
 
 View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
     m_fps(0.0f), m_rockTimeLeft(0.0f), m_rockTimeRight(0.0f),
-    m_leftShield(nullptr), m_rightShield(nullptr),
-    m_drawMode(DrawMode::DEFAULT), m_world(WORLD_DEMO),
+    m_shield(nullptr), m_drawMode(DrawMode::DEFAULT), m_world(WORLD_DEMO),
     m_exposure(1.0f), m_useAdaptiveExposure(true)
 {
     // View needs all mouse move events, not just mouse drag events
@@ -67,8 +66,7 @@ View::~View()
 {
     if (m_hmd) vr::VR_Shutdown();
     // Must remove shields here to ensure entity deletion happens in right order
-    m_worlds[m_world]->getPhysWorld()->removeRigidBody(m_leftShield->m_rigidBody.get());
-    m_worlds[m_world]->getPhysWorld()->removeRigidBody(m_rightShield->m_rigidBody.get());
+    m_worlds[m_world]->getPhysWorld()->removeRigidBody(m_shield->m_rigidBody.get());
     glDeleteVertexArrays(1, &m_fullscreenQuadVAO);
 }
 
@@ -636,14 +634,12 @@ void View::drawRocks(glm::mat4& V, glm::mat4& P) {
 void View::drawDistortionObjects() {
     m_distortionStencilProgram->setTexture("normalMap", *m_shieldMap);
 
-    glm::mat4 M;
-    m_leftShield->getModelMatrix(M);
-    m_distortionStencilProgram->setUniform("M", M);
-    m_rightShield->draw();
-
-    m_rightShield->getModelMatrix(M);
-    m_distortionStencilProgram->setUniform("M", M);
-    m_rightShield->draw();
+    if (m_action == WATER && _axisStates[LEFT_TRIGGER] >= 1.0f && _axisStates[RIGHT_TRIGGER] >= 1.0f) {
+        glm::mat4 M;
+        m_shield->getModelMatrix(M);
+        m_distortionStencilProgram->setUniform("M", M);
+        m_shield->draw();
+    }
 }
 
 void View::mousePressEvent(QMouseEvent *event) {
@@ -840,12 +836,29 @@ void View::tick() {
     updateRocks();
 
     // Shield movement
-    btTransform t;
-    t.setIdentity();
-    t.setOrigin(btVector3(2.2f * std::sin(m_globalTime/2.0f), 0, 2.2f * std::cos(m_globalTime/2.0f)));
-    t.setRotation(btQuaternion(m_globalTime/2.0f, 0, 0));
-    m_leftShield->m_rigidBody->setWorldTransform(t);
-    m_leftShield->m_rigidBody->getMotionState()->setWorldTransform(t);
+    if (m_action == WATER && _axisStates[LEFT_TRIGGER] >= 1.0f && _axisStates[RIGHT_TRIGGER] >= 1.0f) {
+        btTransform t;
+        t.setIdentity();
+        glm::mat4 M1 = vrMatrixToQt(m_trackedHandPoses[Hand::RIGHT].mDeviceToAbsoluteTracking);
+        glm::vec3 p1 = glm::vec3(M1[3]);
+        glm::mat4 M2 = vrMatrixToQt(m_trackedHandPoses[Hand::LEFT].mDeviceToAbsoluteTracking);
+        glm::vec3 p2 = glm::vec3(M2[3]);
+        glm::vec3 o = (p1 + p2) / 2.0f;
+        float l = glm::length(p1 - p2);
+        t.setOrigin(btVector3(o.x, o.y, o.z));
+        glm::quat r = glm::quat(glm::mat3(vrMatrixToQt(m_trackedHandPoses[Hand::RIGHT].mDeviceToAbsoluteTracking)));
+        t.setRotation(btQuaternion(r.x, r.y, r.z, r.w));
+        m_shield->setScale(glm::scale(glm::vec3(0.01f, l, l)));
+        m_shield->m_rigidBody->setWorldTransform(t);
+        m_shield->m_rigidBody->getMotionState()->setWorldTransform(t);
+    } else {
+        btTransform t;
+        t.setIdentity();
+        t.setOrigin(btVector3(0.0f, 10000.0f, 0.0f));
+        m_shield->setScale(glm::scale(glm::vec3(1)));
+        m_shield->m_rigidBody->setWorldTransform(t);
+        m_shield->m_rigidBody->getMotionState()->setWorldTransform(t);
+    }
 
     m_worlds[m_world]->update(m_dt);
 
@@ -856,22 +869,15 @@ void View::tick() {
 void View::switchWorld(WorldState prevWorld) {
     m_worlds[m_world]->makeCurrent();
 
-    if (!m_leftShield && !m_rightShield) {
-        m_leftShield = std::make_unique<Entity>(m_worlds[m_world]->getPhysWorld(), ShapeType::CUBE, 0.0f,
-                                                btVector3(0.0f, 0.0f, 1.5f), btVector3(1.5f, 1.5f, 0.05f));
-        m_leftShield->m_rigidBody->setCollisionFlags(m_leftShield->m_rigidBody->getCollisionFlags() |
+    if (!m_shield) {
+        m_shield = std::make_unique<Entity>(m_worlds[m_world]->getPhysWorld(), ShapeType::CUBE, 0.0f,
+                                                btVector3(0.0f, 10000.0f, 0.0f), btVector3(1.0f, 1.0f, 1.0f));
+        m_shield->m_rigidBody->setCollisionFlags(m_shield->m_rigidBody->getCollisionFlags() |
                                                      btCollisionObject::CF_KINEMATIC_OBJECT);
-        m_leftShield->m_rigidBody->setActivationState(DISABLE_DEACTIVATION);
-        m_rightShield = std::make_unique<Entity>(m_worlds[m_world]->getPhysWorld(), ShapeType::CUBE, 0.0f,
-                                                 btVector3(0.0f, 0.5f, 0.0f), btVector3(0.5f, 0.5f, 0.5f));
-        m_leftShield->m_rigidBody->setCollisionFlags(m_leftShield->m_rigidBody->getCollisionFlags() |
-                                                     btCollisionObject::CF_KINEMATIC_OBJECT);
-        m_leftShield->m_rigidBody->setActivationState(DISABLE_DEACTIVATION);
+        m_shield->m_rigidBody->setActivationState(DISABLE_DEACTIVATION);
     } else {
-        m_worlds[prevWorld]->getPhysWorld()->removeRigidBody(m_leftShield->m_rigidBody.get());
-        m_worlds[prevWorld]->getPhysWorld()->removeRigidBody(m_rightShield->m_rigidBody.get());
-        m_worlds[m_world]->getPhysWorld()->addRigidBody(m_leftShield->m_rigidBody.get());
-        m_worlds[m_world]->getPhysWorld()->addRigidBody(m_rightShield->m_rigidBody.get());
+        m_worlds[prevWorld]->getPhysWorld()->removeRigidBody(m_shield->m_rigidBody.get());
+        m_worlds[m_world]->getPhysWorld()->addRigidBody(m_shield->m_rigidBody.get());
     }
 }
 
